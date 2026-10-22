@@ -137,10 +137,14 @@ class SandboxBuildSpecLinux(SandboxBuildSpec):
     dependencies: DependenciesLinux
 
 
+PosixSemaphoreAccess = Literal["none", "create-unlink", "full"]
+
+
 @dataclass(frozen=True, kw_only=True)
 class SandboxBuildSpecDarwin(SandboxBuildSpec):
     platform: Literal["darwin"]
     job_control_script: Path
+    posix_semaphore_access: PosixSemaphoreAccess
     dependencies: DependenciesDarwin
 
 
@@ -241,6 +245,7 @@ def load_build_spec(path: Path) -> SandboxBuildSpecLinux | SandboxBuildSpecDarwi
                 **common,
                 platform="darwin",
                 job_control_script=Path(data["job_control_script"]),
+                posix_semaphore_access=data["posix_semaphore_access"],
                 dependencies=DependenciesDarwin.from_dict(dependencies_data),
             )
         case _:

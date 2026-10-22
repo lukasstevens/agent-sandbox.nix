@@ -291,6 +291,7 @@ def _get_profile_lines(
     lines += seatbelt.SYSCTLS
     lines += seatbelt.process_exec(host.workspace_dir)
     lines += seatbelt.MACH_IPC
+    lines += seatbelt.posix_semaphores(spec.posix_semaphore_access)
     if "chromium" in spec.allow_headless_browsers:
         lines += seatbelt.HEADLESS_BROWSERS_CHROMIUM
     if "firefox" in spec.allow_headless_browsers:

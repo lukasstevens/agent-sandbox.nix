@@ -47,6 +47,7 @@ def nix_eval(
     platform: Literal["linux", "darwin"] | None = None,
     allow_nix: object = _OMITTED,
     allow_unix_sockets: object = _OMITTED,
+    darwin_posix_semaphore_access: object = _OMITTED,
     allow_headless_browsers: object = _OMITTED,
     allowed_domains: object = _OMITTED,
     allowed_host_ports: object = _OMITTED,
@@ -62,6 +63,7 @@ def nix_eval(
     args = {
         "allowNix": allow_nix,
         "allowUnixSockets": allow_unix_sockets,
+        "darwinPosixSemaphoreAccess": darwin_posix_semaphore_access,
         "allowHeadlessBrowsers": allow_headless_browsers,
         "allowedDomains": allowed_domains,
         "allowedHostPorts": allowed_host_ports,

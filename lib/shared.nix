@@ -122,6 +122,15 @@ let
     else
       allowUnixSockets;
 
+  validateDarwinPosixSemaphoreAccess =
+    access:
+    if !(builtins.elem access [ "none" "create-unlink" "full" ]) then
+      builtins.throw "${errorPrefix} darwinPosixSemaphoreAccess must be one of \"none\", \"create-unlink\", or \"full\""
+    else if !pkgs.stdenv.hostPlatform.isDarwin && access != "none" then
+      builtins.throw "${errorPrefix} darwinPosixSemaphoreAccess is only supported on macOS; use \"none\" on Linux"
+    else
+      access;
+
   validateAllowHeadlessBrowsers =
     allowHeadlessBrowsers:
     let
@@ -277,6 +286,7 @@ let
       allowedHostPorts,
       publishedPorts,
       allowUnixSockets,
+      darwinPosixSemaphoreAccess,
       allowHeadlessBrowsers,
       workspaceDir,
       proxyRedirects,
@@ -285,16 +295,18 @@ let
       builtins.seq allowedHostPorts (
         builtins.seq publishedPorts (
           builtins.seq allowUnixSockets (
-            builtins.seq allowHeadlessBrowsers (
-              builtins.seq workspaceDir (
-                builtins.seq proxyRedirects (
-                  pkgs.runCommand outName { } ''
-                    mkdir -p $out/bin
-                    install -m755 ${stub} $out/bin/${outName}
-                  ''
-                  // {
-                    buildSpec = buildSpec;
-                  }
+            builtins.seq darwinPosixSemaphoreAccess (
+              builtins.seq allowHeadlessBrowsers (
+                builtins.seq workspaceDir (
+                  builtins.seq proxyRedirects (
+                    pkgs.runCommand outName { } ''
+                      mkdir -p $out/bin
+                      install -m755 ${stub} $out/bin/${outName}
+                    ''
+                    // {
+                      buildSpec = buildSpec;
+                    }
+                  )
                 )
               )
             )
@@ -311,6 +323,7 @@ in
   validateAllowedHostPorts = validateAllowedHostPorts;
   validatePublishedPorts = validatePublishedPorts;
   validateAllowUnixSockets = validateAllowUnixSockets;
+  validateDarwinPosixSemaphoreAccess = validateDarwinPosixSemaphoreAccess;
   validateAllowHeadlessBrowsers = validateAllowHeadlessBrowsers;
   validateWorkspaceDir = validateWorkspaceDir;
   validateProxyRedirects = validateProxyRedirects;

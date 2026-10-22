@@ -5,6 +5,7 @@ from launcher.lib.build_spec import (
     DependenciesDarwin,
     DependenciesLinux,
     PublishedPort,
+    PosixSemaphoreAccess,
     SandboxBuildSpecDarwin,
     SandboxBuildSpecLinux,
 )
@@ -65,6 +66,7 @@ def make_spec_darwin(
     *,
     allow_nix: bool = False,
     allow_unix_sockets: bool = False,
+    posix_semaphore_access: PosixSemaphoreAccess = "none",
     env_keys: tuple[str, ...] = (),
 ) -> SandboxBuildSpecDarwin:
     return SandboxBuildSpecDarwin(
@@ -92,6 +94,7 @@ def make_spec_darwin(
         sandboxed_binary=Path("/nix/store/agent/bin/agent"),
         proxy=None,
         job_control_script=Path("/nix/store/job-control"),
+        posix_semaphore_access=posix_semaphore_access,
         dependencies=DependenciesDarwin(
             git=Path("/nix/store/git/bin/git"),
             python=Path("/nix/store/python3/bin/python3"),

@@ -22,6 +22,7 @@
   closurePathsFile,
   preEntryScript,
   jobControlScript,
+  darwinPosixSemaphoreAccess,
   allowedDomains,
   _proxyRedirects ? { },
 }:
@@ -80,6 +81,7 @@ let
     else
       {
         job_control_script = "${jobControlScript}";
+        posix_semaphore_access = darwinPosixSemaphoreAccess;
       };
 
   spec = {

@@ -7,6 +7,7 @@
   allowedPackages,
   allowNix ? false,
   allowUnixSockets ? false,
+  darwinPosixSemaphoreAccess ? "none",
   allowHeadlessBrowsers ? [ ],
   rwDirs ? [ ],
   rwFiles ? [ ],
@@ -60,6 +61,8 @@ let
     allowHeadlessBrowsers = validatedAllowHeadlessBrowsers;
   };
 
+  validatedDarwinPosixSemaphoreAccess = shared.validateDarwinPosixSemaphoreAccess darwinPosixSemaphoreAccess;
+
   validatedWorkspaceDir = shared.validateWorkspaceDir workspaceDir;
 
   validatedProxyRedirects = shared.validateProxyRedirects _proxyRedirects;
@@ -91,6 +94,7 @@ let
         closurePathsFile = closurePathsFile;
         preEntryScript = shared.preEntryScript;
         jobControlScript = shared.jobControlScript;
+        darwinPosixSemaphoreAccess = validatedDarwinPosixSemaphoreAccess;
         allowedDomains = allowedDomains;
         _proxyRedirects = validatedProxyRedirects;
       };
@@ -120,6 +124,7 @@ shared.mkWrapper {
   allowedHostPorts = validatedAllowedHostPorts;
   publishedPorts = validatedPublishedPorts;
   allowUnixSockets = validatedAllowUnixSockets;
+  darwinPosixSemaphoreAccess = validatedDarwinPosixSemaphoreAccess;
   allowHeadlessBrowsers = validatedAllowHeadlessBrowsers;
   workspaceDir = validatedWorkspaceDir;
   proxyRedirects = validatedProxyRedirects;

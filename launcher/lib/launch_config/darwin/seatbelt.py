@@ -4,7 +4,7 @@ owns the order, which is load-bearing: seatbelt is last-match-wins."""
 from pathlib import Path
 from typing import Sequence
 
-from launcher.lib.build_spec import PublishedPort
+from launcher.lib.build_spec import PosixSemaphoreAccess, PublishedPort
 from launcher.lib.host_state import DeclaredDir, DeclaredPath
 
 HEADER = (
@@ -58,6 +58,20 @@ MACH_IPC = (
     "(allow ipc-posix-shm-write-data)",
     "(allow ipc-posix-shm-write-create)",
 )
+
+def posix_semaphores(access: PosixSemaphoreAccess) -> tuple[str, ...]:
+    # Names are host-global on Darwin. Even create-unlink permits removing
+    # other same-user semaphore names; it is not a private IPC namespace.
+    if access == "none":
+        return ()
+    if access == "create-unlink":
+        rule = "(allow ipc-posix-sem-create ipc-posix-sem-unlink)"
+    elif access == "full":
+        rule = "(allow ipc-posix-sem)"
+    else:
+        raise ValueError(f"unknown POSIX semaphore access: {access!r}")
+    return ("", ";; POSIX named semaphores (darwinPosixSemaphoreAccess)", rule)
+
 
 HEADLESS_BROWSERS_CHROMIUM = (
     "",

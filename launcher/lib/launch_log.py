@@ -85,6 +85,11 @@ def write_launch_request(
             _field("network", network),
             _field("allowNix", str(spec.allow_nix).lower()),
             _field("allowUnixSockets", str(spec.allow_unix_sockets).lower()),
+            *(
+                [_field("darwinPosixSemaphoreAccess", spec.posix_semaphore_access)]
+                if isinstance(spec, SandboxBuildSpecDarwin)
+                else []
+            ),
             _list_field("allowHeadlessBrowsers", spec.allow_headless_browsers),
             _field("allowedHostPorts", host_ports),
             _field("publishedPorts", published_ports),

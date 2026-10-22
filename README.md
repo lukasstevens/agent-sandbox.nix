@@ -34,6 +34,7 @@ Everything else is denied. Only changes to the project directory and declared rw
     * [Host ports](#host-ports)
     * [Published ports](#published-ports)
 * [UNIX-domain sockets](#unix-domain-sockets)
+* [POSIX semaphores on macOS](#posix-semaphores-on-macos)
 * [Authentication](#authentication)
     * [Environment variable tokens (recommended)](#environment-variable-tokens-recommended)
     * [Credential files via `rwDirs`](#credential-files-via-rwdirs)
@@ -139,6 +140,7 @@ Set `CLAUDE_CONFIG_DIR` to `$HOME/.claude`, so that Claude writes `~/.claude.jso
 | `roFiles` | no | Individual files the agent can read but not write (for example `~/.config/git/config` for the git identity, see [Setting your git identity](#setting-your-git-identity) |
 | `env` | no | Additional environment variables, as an attrset |
 | `allowedDomains` | no | Limits the domains the sandbox can reach. Leave it unset for open internet. Accepts a list of domains (all methods allowed), or an attrset that maps each domain to `"*"` or to a list of HTTP methods. `[ ]` blocks all internet access. |
+| `darwinPosixSemaphoreAccess` | no | macOS named POSIX semaphore permissions: `"none"` (default), `"create-unlink"`, or `"full"`. Non-default values are rejected on Linux. See [POSIX semaphores on macOS](#posix-semaphores-on-macos). |
 | `allowUnixSockets` | no | If `true`, the agent can create and connect to UNIX-domain (AF_UNIX) sockets. It can connect in directories it can read, and bind in directories it can write. Defaults to `false`. See [UNIX-domain sockets](#unix-domain-sockets). |
 | `allowedHostPorts` | no | Host-local TCP ports the sandbox can reach. Defaults to `[ ]`. Set it to `null` to allow all host-local TCP ports. Otherwise, entries must be integers from `1` to `65535`. |
 | `publishedPorts` | no | Host TCP ports forwarded INTO the sandbox, so services the agent runs are reachable from outside. Defaults to `[ ]`. Entries are an integer port (bound to `127.0.0.1`) or `{ port = <int>; bindAddr = "<ipv4>"; }`. There is no `null` form. See [Published ports](#published-ports). |
@@ -272,6 +274,25 @@ UNIX-domain sockets are denied by default, because a sandboxed process could use
 Socket access then follows the filesystem grants on both platforms. In paths the agent can write (the project directory and `rwDirs`), the agent can create sockets and connect to them. In read-only paths (`roDirs`, `roFiles`, and the repository root when you launch from a subdirectory), the agent can only connect.
 
 `allowNix = true` requires `allowUnixSockets = true`, because the agent reaches the nix daemon over a UNIX-domain socket.
+
+## POSIX semaphores on macOS
+
+Named POSIX semaphores are denied by default. Some language runtimes, parallel garbage collectors, and multiprocessing tools need them for synchronization. This permission is independent of network ports, UNIX sockets, and shared memory.
+
+```nix
+darwinPosixSemaphoreAccess =
+  if pkgs.stdenv.hostPlatform.isDarwin then "create-unlink" else "none";
+```
+
+| Policy | Permissions |
+|---|---|
+| `"none"` | No named POSIX semaphore permissions (the default). |
+| `"create-unlink"` | Create and unlink named semaphores. Opening an existing name remains denied, including names created by the sandbox itself. Already acquired handles can synchronize threads and forked children. Suitable for runtimes that create a fresh semaphore with `O_CREAT \| O_EXCL` and immediately unlink it. |
+| `"full"` | Also open existing named semaphores, for processes that rendezvous by name rather than inherit handles. |
+
+**These permissions do not create a private IPC namespace.** macOS semaphore names are host-global, not filesystem paths, so `rwDirs`, `roDirs`, and the synthetic HOME do not scope them. Both enabled policies permit unlinking other same-user semaphore names, which can disrupt host applications or interfere with later opens. `"full"` additionally permits opening and manipulating host semaphores when ordinary OS permissions allow it. Creating named objects can also consume host semaphore resources. Enable only the level your workload needs; neither policy is equivalent to VM isolation.
+
+The option is deliberately Darwin-specific. Non-default values on Linux fail evaluation rather than silently changing or claiming equivalent IPC permissions. The selected policy is recorded in `launch.log`.
 
 ## Authentication
 
